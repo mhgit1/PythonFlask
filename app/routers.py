@@ -6,13 +6,26 @@ from app import app
 #render_template gives you access to Jinja2 template engine
 #request -objektilla saadaan requestin käsittely routeille
 #make_response -objektilla voidaan lisätä 'header' -tietojen käsittely pyynnöille
-from flask import render_template,request,make_response
-from app.forms import loginForm
+from flask import render_template,request,make_response,flash,redirect
+from app.forms import LoginForm,RegisterForm
+from app import db
+from app.db_models import Users
 
 @app.route('/',methods=['GET','POST'])
 def index():
-    login = loginForm()
-    return render_template('template_index.html',form=login)
+    login = LoginForm()
+    if request.method == 'GET':
+        return render_template('template_index.html',form=login)
+    else:
+        #Check if form data is valid
+        if login.validate_on_submit():
+            print(login.email.data)
+            print(login.passw.data)
+            return render_template('template_user.html')
+        #form data was not valid
+        else:
+            flash('Give proper information to email and password fields')
+            return render_template('template_index.html',form=login)
 
     #name = 'Jussi'
     #address = 'Jokukatu 1'
@@ -20,7 +33,25 @@ def index():
     #response.headers.add('Cache-Control','no-cache')
     #return response
     #return render_template('template_index.html',title=address,name=name)
-    #return 'Hello World'
+    #return 'Hello World'        
+
+        
+@app.route('/register',methods=['GET','POST'])
+def registerUser():
+    form = RegisterForm()
+    if request.method == 'GET':
+        return render_template('template_register.html',form=form)
+    else:
+        if form.validate_on_submit():
+            user = Users(form.email.data,form.passw.data)
+            db.session.add(user)
+            db.session.commit()
+            flash('Name {0} registered'.format(form.email.data))
+            return redirect('/')
+        else:
+            flash('Invalid email address or password missing')
+            return render_template('template_register.html',form=form)
+
     
 @app.route('/user/<username>')
 def user(username):
@@ -35,3 +66,4 @@ def user(username):
 def userParams():
     name = request.args.get('name')   #luetaan /user -kontekstiin tulevasta pyynnöstä attribuutti 'name'
     return render_template('template_user.html',name=name)
+

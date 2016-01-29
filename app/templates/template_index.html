@@ -22,7 +22,7 @@
 {% block body %}
     {{super()}}
     <div class="my_container">
-        <form action="/login" method="post">
+        <form action="/" method="POST">
             {{ form.csrf_token }}
             {{ form.email.label }}
             {{ form.email(class='form-control',id='email') }}
